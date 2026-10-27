@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">Bunch business management platform</title>
+  <desc id="description">One platform. Your whole business in sync.</desc>
+  <defs>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#d2ff4d" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#d2ff4d" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ember" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ff5b21" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#ff5b21" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#f5f3ec"/>
+  <circle cx="980" cy="200" r="380" fill="url(#glow)"/>
+  <circle cx="820" cy="520" r="240" fill="url(#ember)"/>
+  <rect x="88" y="78" width="50" height="50" rx="14" fill="#0c0c0e"/>
+  <text x="113" y="115" fill="#d2ff4d" font-family="Arial,sans-serif" font-size="34" font-weight="800" text-anchor="middle">b</text>
+  <circle cx="136" cy="80" r="9" fill="#ff5b21" stroke="#f5f3ec" stroke-width="3"/>
+  <text x="152" y="115" fill="#0c0c0e" font-family="Arial,sans-serif" font-size="34" font-weight="800" letter-spacing="-1.5">bunch</text>
+  <text x="88" y="280" fill="#0c0c0e" font-family="Arial,sans-serif" font-size="78" font-weight="700" letter-spacing="-3">One platform.</text>
+  <text x="88" y="370" fill="#0c0c0e" font-family="Georgia,serif" font-size="78" font-style="italic" letter-spacing="-2">Your whole business in sync.</text>
+  <rect x="88" y="440" width="380" height="58" rx="29" fill="#0c0c0e"/>
+  <text x="278" y="477" fill="#ffffff" font-family="Arial,sans-serif" font-size="22" font-weight="600" text-anchor="middle">Unlimited users. One flat price.</text>
+</svg>
