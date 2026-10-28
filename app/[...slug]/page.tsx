@@ -164,31 +164,33 @@ function Breadcrumbs({ segments }: { segments: string[] }) {
   );
 }
 
+function BuiltInPage({ route, slug }: { route: string; slug: string[] }) {
+  const preview = getPreviewRoute(route, slug);
+  if (!preview) notFound();
+  return (
+    <main className="editorial-page page-shell">
+      <Breadcrumbs segments={slug} />
+      <p className="eyebrow">BUNCH FOR BUSINESS</p>
+      <h1>{preview.title}</h1>
+      <p className="editorial-intro">{preview.description}</p>
+      {preview.reviewNote ? (
+        <p className="content-review-banner">{preview.reviewNote}</p>
+      ) : null}
+      {preview.body ? (
+        <div className="portable-content"><p>{preview.body}</p></div>
+      ) : null}
+      <Link className="button button-primary" href="/start-free-trial/">
+        Start free trial <ArrowRight size={16} />
+      </Link>
+    </main>
+  );
+}
+
 export default async function MarketingRoute({ params }: RouteProps) {
   const { slug } = await params;
   const route = canonicalPath(slug);
 
-  if (useStaticPreview) {
-    const preview = getPreviewRoute(route, slug);
-    if (!preview) notFound();
-    return (
-      <main className="editorial-page page-shell">
-        <Breadcrumbs segments={slug} />
-        <p className="eyebrow">BUNCH FOR BUSINESS</p>
-        <h1>{preview.title}</h1>
-        <p className="editorial-intro">{preview.description}</p>
-        {preview.reviewNote ? (
-          <p className="content-review-banner">{preview.reviewNote}</p>
-        ) : null}
-        {preview.body ? (
-          <div className="portable-content"><p>{preview.body}</p></div>
-        ) : null}
-        <Link className="button button-primary" href="/start-free-trial/">
-          Start free trial <ArrowRight size={16} />
-        </Link>
-      </main>
-    );
-  }
+  if (useStaticPreview) return <BuiltInPage route={route} slug={slug} />;
 
   if (slug[0] === "blogs" && slug[1] === "tag" && slug[2]) {
     const { getBlogPosts } = await import("@/sanity/queries");
@@ -270,7 +272,9 @@ export default async function MarketingRoute({ params }: RouteProps) {
     getMarketingPage(route),
     getSiteSettings(),
   ]);
-  if (!page || !settings) notFound();
+  // Pages not yet created in Sanity (e.g. the legal pages) use the built-in
+  // placeholder instead of a 404.
+  if (!page) return <BuiltInPage route={route} slug={slug} />;
   const faqSchema = page.faqs?.length
     ? {
         "@context": "https://schema.org",
@@ -292,7 +296,7 @@ export default async function MarketingRoute({ params }: RouteProps) {
         offers: {
           "@type": "Offer",
           priceCurrency: "INR",
-          price: settings.pricing.annualAmount,
+          price: settings?.pricing.annualAmount ?? 49980,
           description: "Annual plan, excluding GST",
         },
       }
