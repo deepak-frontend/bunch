@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { demoRequestEmail } from "@/lib/demo-email";
 import { isEmailConfigured, sendSubmissionEmail } from "@/lib/email";
 import { demoFormSchema, validationMessage } from "@/lib/forms";
 import { forwardSubmission } from "@/lib/integration";
@@ -40,20 +41,14 @@ export async function POST(request: Request) {
         { status: 429 },
       );
 
-    const { name, email, phone } = parsed.data;
     const deliveries = await Promise.allSettled([
       isEmailConfigured()
-        ? sendSubmissionEmail({
-            subject: `New discovery call request from ${name}`,
-            replyTo: email,
-            fields: [
-              ["Name", name],
-              ["Work email", email],
-              ["Phone / WhatsApp", phone],
-              ["Submitted from", request.headers.get("referer") ?? "Bunch website"],
-              ["Submitted at", new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) + " IST"],
-            ],
-          })
+        ? sendSubmissionEmail(
+            demoRequestEmail(parsed.data, {
+              page: request.headers.get("referer") ?? "Bunch website",
+              submittedAt: new Date(),
+            }),
+          )
         : Promise.resolve(false),
       endpoint ? forwardSubmission(endpoint, parsed.data) : Promise.resolve(false),
     ]);
