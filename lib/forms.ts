@@ -1,22 +1,34 @@
 import { z } from "zod";
 
-const emailSchema = z.string().trim().email().max(254);
+const emailSchema = z
+  .string()
+  .trim()
+  .email({ error: "Please enter a valid email address." })
+  .max(254, { error: "Please enter a shorter email address." });
 const phoneSchema = z
   .string()
   .trim()
-  .min(7)
-  .max(24)
-  .regex(/^[+()\d\s.-]+$/);
+  .min(7, { error: "Please enter a valid phone number." })
+  .max(24, { error: "Please enter a valid phone number." })
+  .regex(/^[+()\d\s.-]+$/, { error: "Please enter a valid phone number." });
+const nameSchema = z
+  .string()
+  .trim()
+  .min(2, { error: "Please enter your name." })
+  .max(100, { error: "Please enter a shorter name." });
+// Hidden from people; anything typed here marks the request as a bot. It must
+// pass validation so the route can quietly accept and discard it.
+const honeypotSchema = z.string().max(500).optional().default("");
 
 export const demoFormSchema = z.object({
-  name: z.string().trim().min(2).max(100),
+  name: nameSchema,
   email: emailSchema,
   phone: phoneSchema,
-  website: z.string().max(0).optional().default(""),
+  website: honeypotSchema,
 });
 
 export const trialFormSchema = z.object({
-  name: z.string().trim().min(2).max(100),
+  name: nameSchema,
   email: emailSchema,
   phone: phoneSchema,
   companyName: z.string().trim().min(2).max(120),
@@ -29,7 +41,7 @@ export const trialFormSchema = z.object({
   referralCode: z.string().trim().max(64).optional().default(""),
   termsAccepted: z.literal(true),
   privacyAccepted: z.literal(true),
-  website: z.string().max(0).optional().default(""),
+  website: honeypotSchema,
 });
 
 export type DemoFormData = z.infer<typeof demoFormSchema>;

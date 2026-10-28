@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
+import { isEmailConfigured, sendSubmissionEmail } from "@/lib/email";
 import { demoFormSchema, validationMessage } from "@/lib/forms";
 import { forwardSubmission } from "@/lib/integration";
-import {
-  checkRateLimit,
-  isRateLimitConfigured,
-  requestAddress,
-} from "@/lib/rate-limit";
+import { checkRateLimit, requestAddress } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   let input: unknown;
@@ -22,12 +19,13 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+  // Honeypot filled in: answer like a success so bots learn nothing.
   if (parsed.data.website) {
     return NextResponse.json({ success: true }, { status: 200 });
   }
 
   const endpoint = process.env.DEMO_API_ENDPOINT;
-  if (!endpoint || !isRateLimitConfigured()) {
+  if (!endpoint && !isEmailConfigured()) {
     return NextResponse.json(
       { message: "Demo requests are not configured yet." },
       { status: 503 },
@@ -41,13 +39,37 @@ export async function POST(request: Request) {
         { message: "Please try again later." },
         { status: 429 },
       );
-    const forwarded = await forwardSubmission(endpoint, parsed.data);
-    if (!forwarded)
+
+    const { name, email, phone } = parsed.data;
+    const deliveries = await Promise.allSettled([
+      isEmailConfigured()
+        ? sendSubmissionEmail({
+            subject: `New discovery call request from ${name}`,
+            replyTo: email,
+            fields: [
+              ["Name", name],
+              ["Work email", email],
+              ["Phone / WhatsApp", phone],
+              ["Submitted from", request.headers.get("referer") ?? "Bunch website"],
+              ["Submitted at", new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) + " IST"],
+            ],
+          })
+        : Promise.resolve(false),
+      endpoint ? forwardSubmission(endpoint, parsed.data) : Promise.resolve(false),
+    ]);
+    const delivered = deliveries.some(
+      (result) => result.status === "fulfilled" && result.value,
+    );
+
+    if (!delivered)
       return NextResponse.json(
         { message: "We could not send your request right now." },
         { status: 502 },
       );
-    return NextResponse.json({ success: true }, { status: 201 });
+    return NextResponse.json(
+      { success: true, message: "Thanks! We'll be in touch within one business day." },
+      { status: 201 },
+    );
   } catch {
     return NextResponse.json(
       { message: "We could not send your request right now." },

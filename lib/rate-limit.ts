@@ -11,12 +11,29 @@ export function isRateLimitConfigured() {
   return configured;
 }
 
+// Best-effort fallback when Upstash isn't configured: counts requests per
+// address in this server instance's memory over a sliding hour.
+const memoryHits = new Map<string, number[]>();
+
+function checkMemoryLimit(key: string, limit: number) {
+  const now = Date.now();
+  const recent = (memoryHits.get(key) ?? []).filter((time) => now - time < 3_600_000);
+  if (recent.length >= limit) {
+    memoryHits.set(key, recent);
+    return false;
+  }
+  recent.push(now);
+  memoryHits.set(key, recent);
+  if (memoryHits.size > 5_000) memoryHits.delete(memoryHits.keys().next().value!);
+  return true;
+}
+
 export async function checkRateLimit(
   kind: string,
   address: string,
   limit: number,
 ) {
-  if (!configured) return false;
+  if (!configured) return checkMemoryLimit(`${kind}:${address}`, limit);
   let limiter = limiters.get(kind);
 
   if (!limiter) {
