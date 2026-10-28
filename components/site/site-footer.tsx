@@ -44,7 +44,7 @@ export function SiteFooter() {
             <Link href="/enterprise/">Enterprise</Link>
             <Link href="/case-studies/">Case Studies</Link>
             <Link href="/blogs/">Blogs</Link>
-            <Link href="/book-a-discovery-call/">Book a call</Link>
+            <Link href="/contact-us/">Contact us</Link>
           </div>
           <div>
             <b>Follow</b>

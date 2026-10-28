@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { contactIndustries, contactTeamSizes } from "./contact-options";
 
 const emailSchema = z
   .string()
@@ -44,6 +45,27 @@ export const trialFormSchema = z.object({
   website: honeypotSchema,
 });
 
+export const contactFormSchema = z.object({
+  name: nameSchema,
+  phone: phoneSchema,
+  email: emailSchema,
+  company: z
+    .string()
+    .trim()
+    .min(2, { error: "Please enter your company name." })
+    .max(120, { error: "Please enter a shorter company name." }),
+  industry: z.enum(contactIndustries, { error: "Please choose your industry." }),
+  teamSize: z.enum(contactTeamSizes, { error: "Please choose your team size." }),
+  message: z
+    .string()
+    .trim()
+    .max(2000, { error: "Please keep your message under 2,000 characters." })
+    .optional()
+    .default(""),
+  website: honeypotSchema,
+});
+
+export type ContactFormData = z.infer<typeof contactFormSchema>;
 export type DemoFormData = z.infer<typeof demoFormSchema>;
 export type TrialFormData = z.infer<typeof trialFormSchema>;
 

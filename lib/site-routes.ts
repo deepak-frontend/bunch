@@ -20,6 +20,7 @@ export const marketingRoutes = [
   "/case-studies/",
   "/blogs/",
   "/book-a-discovery-call/",
+  "/contact-us/",
   "/terms-of-service/",
   "/privacy-policy/",
   "/cookie-policy/",
@@ -38,6 +39,7 @@ const dedicatedPrefixes = [
   "/case-studies/",
   "/blogs/",
   "/book-a-discovery-call/",
+  "/contact-us/",
   "/start-free-trial/",
 ];
 
