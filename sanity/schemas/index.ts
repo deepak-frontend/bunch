@@ -1,5 +1,6 @@
 import { defineField, defineType } from "sanity";
 import { homeDefaults } from "@/content/site/home";
+import { lead } from "./lead";
 
 const seoFields = () => [
   defineField({ name: "seoTitle", title: "SEO title", type: "string" }),
@@ -586,4 +587,5 @@ export const schemaTypes = [
   comparisonRow,
   genericPage,
   blogPost,
+  lead,
 ];

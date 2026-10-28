@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { contactRequestEmail } from "@/lib/demo-email";
 import { isEmailConfigured, sendSubmissionEmail } from "@/lib/email";
 import { contactFormSchema, validationMessage } from "@/lib/forms";
+import { isLeadStoreConfigured, saveLead } from "@/lib/leads";
 import { checkRateLimit, requestAddress } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true }, { status: 200 });
   }
 
-  if (!isEmailConfigured()) {
+  if (!isEmailConfigured() && !isLeadStoreConfigured()) {
     return NextResponse.json(
       { message: "The contact form is not configured yet." },
       { status: 503 },
@@ -39,13 +40,21 @@ export async function POST(request: Request) {
         { status: 429 },
       );
 
-    const sent = await sendSubmissionEmail(
-      contactRequestEmail(parsed.data, {
-        page: request.headers.get("referer") ?? "Bunch website",
-        submittedAt: new Date(),
-      }),
+    const context = {
+      page: request.headers.get("referer") ?? "Bunch website",
+      submittedAt: new Date(),
+    };
+    const deliveries = await Promise.allSettled([
+      isEmailConfigured()
+        ? sendSubmissionEmail(contactRequestEmail(parsed.data, context))
+        : Promise.resolve(false),
+      saveLead({ formType: "contact", ...parsed.data, ...context }),
+    ]);
+    const delivered = deliveries.some(
+      (result) => result.status === "fulfilled" && result.value,
     );
-    if (!sent)
+
+    if (!delivered)
       return NextResponse.json(
         { message: "We could not send your message right now." },
         { status: 502 },
