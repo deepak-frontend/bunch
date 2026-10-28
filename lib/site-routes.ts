@@ -41,6 +41,8 @@ const dedicatedPrefixes = [
   "/book-a-discovery-call/",
   "/contact-us/",
   "/start-free-trial/",
+  "/privacy-policy/",
+  "/terms-of-service/",
 ];
 
 export function isDedicatedRoute(route: string) {
