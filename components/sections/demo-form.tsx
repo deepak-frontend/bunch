@@ -4,7 +4,15 @@ import { useState, type FormEvent } from "react";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
-export function DemoForm() {
+type DemoFormLabels = {
+  name?: string;
+  email?: string;
+  phone?: string;
+  button?: string;
+  privacy?: string;
+};
+
+export function DemoForm({ labels = {} }: { labels?: DemoFormLabels }) {
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -40,7 +48,7 @@ export function DemoForm() {
         </div>
       ) : (
         <>
-          <label htmlFor="demo-name">Your name</label>
+          <label htmlFor="demo-name">{labels.name || "Your name"}</label>
           <input
             id="demo-name"
             name="name"
@@ -51,7 +59,7 @@ export function DemoForm() {
           />
           <div className="demo-form-row">
             <div>
-              <label htmlFor="demo-email">Work email</label>
+              <label htmlFor="demo-email">{labels.email || "Work email"}</label>
               <input
                 id="demo-email"
                 name="email"
@@ -62,7 +70,7 @@ export function DemoForm() {
               />
             </div>
             <div>
-              <label htmlFor="demo-phone">Phone / WhatsApp</label>
+              <label htmlFor="demo-phone">{labels.phone || "Phone / WhatsApp"}</label>
               <input
                 id="demo-phone"
                 name="phone"
@@ -88,11 +96,11 @@ export function DemoForm() {
             type="submit"
             disabled={submitting}
           >
-            {submitting ? "Sending..." : "Book a discovery call"}
+            {submitting ? "Sending..." : labels.button || "Book a discovery call"}
             <ArrowRight size={16} />
           </button>
           <small>
-            By submitting, you agree to our{" "}
+            {labels.privacy || "By submitting, you agree to our"}{" "}
             <Link href="/privacy-policy/">Privacy Policy</Link>.
           </small>
           <p className="form-message" aria-live="polite">

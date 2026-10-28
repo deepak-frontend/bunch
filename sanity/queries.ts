@@ -39,6 +39,35 @@ export const homeSectionKeys = [
 ] as const;
 export type HomeSectionKey = (typeof homeSectionKeys)[number];
 
+export interface HomeCard {
+  title: string;
+  description?: string;
+  link?: string;
+}
+
+export interface HeroPreview {
+  address?: string;
+  workspaceLabel?: string;
+  navItems?: string[];
+  userName?: string;
+  userInitials?: string;
+  dateLabel?: string;
+  todayLabel?: string;
+  greeting?: string;
+  greetingNote?: string;
+  addLabel?: string;
+  stats?: { label: string; value: string; note?: string }[];
+  activityTitle?: string;
+  activityLinkLabel?: string;
+  activities?: { name: string; action: string; time?: string }[];
+  aiLabel?: string;
+  aiMessage?: string;
+  aiQuestion?: string;
+  aiActionLabel?: string;
+  chipTop?: string;
+  chipBottom?: string;
+}
+
 export interface HomePageContent {
   hiddenSections?: HomeSectionKey[];
   showTicker?: boolean;
@@ -51,6 +80,7 @@ export interface HomePageContent {
   heroSecondaryLabel?: string;
   heroSecondaryLink?: string;
   heroTrustPoints?: string[];
+  heroPreview?: HeroPreview;
   heroImage?: {
     url?: string;
     alt?: string;
@@ -78,12 +108,16 @@ export interface HomePageContent {
   annualPlanDescription?: string;
   annualPopularLabel?: string;
   annualInclusions?: string[];
-  taxDisclaimer?: string;
+  pricePeriod?: string;
+  monthlyPriceNote?: string;
+  annualPriceNote?: string;
   pricingButtonLabel?: string;
+  pricingButtonLink?: string;
   trialNotes?: string[];
   modulesEyebrow?: string;
   modulesTitle?: string;
   modulesDescription?: string;
+  moduleCards?: HomeCard[];
   bunzoEyebrow?: string;
   bunzoTitle?: string;
   bunzoDescription?: string;
@@ -97,14 +131,18 @@ export interface HomePageContent {
   bunzoInputPlaceholder?: string;
   testimonialsEyebrow?: string;
   testimonialsTitle?: string;
+  testimonials?: { quote: string; person: string; role?: string; company?: string }[];
   industriesEyebrow?: string;
   industriesTitle?: string;
   industriesDescription?: string;
+  industryCards?: HomeCard[];
   industriesNote?: string;
   caseStudiesEyebrow?: string;
   caseStudiesTitle?: string;
   caseStudiesDescription?: string;
+  caseStudyCards?: { company: string; metric: string; summary?: string }[];
   caseStudiesLinkLabel?: string;
+  caseStudiesLink?: string;
   comparisonsEyebrow?: string;
   comparisonsTitle?: string;
   comparisonsDescription?: string;
@@ -116,14 +154,27 @@ export interface HomePageContent {
     zohoOne?: string;
   };
   comparisonFootnote?: string;
+  comparisonRows?: {
+    feature: string;
+    bunch: string;
+    spreadsheets: string;
+    bigin: string;
+    zohoOne: string;
+  }[];
   demoEyebrow?: string;
   demoTitle?: string;
   demoDescription?: string;
   demoPoints?: string[];
   demoNote?: string;
+  demoFormNameLabel?: string;
+  demoFormEmailLabel?: string;
+  demoFormPhoneLabel?: string;
+  demoFormButtonLabel?: string;
+  demoFormPrivacyNote?: string;
   faqEyebrow?: string;
   faqTitle?: string;
   faqDescription?: string;
+  faqs?: { question: string; answer: string }[];
   finalCtaTitle?: string;
   finalCtaDescription?: string;
   finalCtaButtonLabel?: string;
@@ -131,26 +182,6 @@ export interface HomePageContent {
   seoTitle?: string;
   seoDescription?: string;
   socialImage?: string;
-}
-
-export interface CollectionItem {
-  _id: string;
-  order?: number;
-  title?: string;
-  route?: string;
-  excerpt?: string;
-  ownerReviewRequired?: boolean;
-  quote?: string;
-  person?: string;
-  role?: string;
-  company?: string;
-  metric?: string;
-  summary?: string;
-  feature?: string;
-  bunch?: string;
-  spreadsheets?: string;
-  bigin?: string;
-  zohoOne?: string;
 }
 
 export interface FaqItem {
@@ -216,46 +247,6 @@ export async function getHomePage() {
       "socialImage": socialImage.asset->url
     }`,
   );
-}
-
-export async function getHomeCollections() {
-  if (!hasSanityConfig) return null;
-
-  const [modules, industries, testimonials, caseStudies, comparisons, faqs] =
-    await Promise.all([
-      sanityClient.fetch<CollectionItem[]>(
-        `*[_type == "modulePage"] | order(order asc){_id, title, route, excerpt, ownerReviewRequired}`,
-        {},
-        fetchOptions,
-      ),
-      sanityClient.fetch<CollectionItem[]>(
-        `*[_type == "industryPage"] | order(order asc){_id, title, route, excerpt}`,
-        {},
-        fetchOptions,
-      ),
-      sanityClient.fetch<CollectionItem[]>(
-        `*[_type == "testimonial"] | order(order asc){_id, quote, person, role, company}`,
-        {},
-        fetchOptions,
-      ),
-      sanityClient.fetch<CollectionItem[]>(
-        `*[_type == "caseStudy"] | order(order asc){_id, title, metric, summary, route}`,
-        {},
-        fetchOptions,
-      ),
-      sanityClient.fetch<CollectionItem[]>(
-        `*[_type == "comparisonRow"] | order(order asc){_id, feature, bunch, spreadsheets, bigin, zohoOne}`,
-        {},
-        fetchOptions,
-      ),
-      sanityClient.fetch<FaqItem[]>(
-        `*[_type == "faq" && showOnHome == true] | order(order asc){_id, question, answer}`,
-        {},
-        fetchOptions,
-      ),
-    ]);
-
-  return { modules, industries, testimonials, caseStudies, comparisons, faqs };
 }
 
 export async function getMarketingPage(route: string) {

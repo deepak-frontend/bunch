@@ -2,23 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { HomePage } from "@/components/sections/home-page";
-import { mergeHomeContent, withHomeFallbacks } from "@/content/site/home";
+import { mergeHomeContent } from "@/content/site/home";
 import { hasSanityConfig } from "@/sanity/env";
-import { previewCollections, previewSettings } from "@/content/static-preview";
+import { previewSettings } from "@/content/static-preview";
 
 // The homepage reads Sanity whenever a project is configured, in development
 // too, so Studio edits show up locally. BUNCH_CONTENT_MODE=static opts out.
 const useBuiltInContent =
   !hasSanityConfig || process.env.BUNCH_CONTENT_MODE === "static";
-
-const emptyCollections = {
-  modules: [],
-  industries: [],
-  testimonials: [],
-  caseStudies: [],
-  comparisons: [],
-  faqs: [],
-};
 
 export async function generateMetadata(): Promise<Metadata> {
   const content = useBuiltInContent
@@ -47,7 +38,6 @@ export default async function Home() {
       <HomePage
         content={mergeHomeContent(null)}
         settings={previewSettings}
-        collections={withHomeFallbacks(previewCollections)}
       />
     );
   }
@@ -74,14 +64,8 @@ export default async function Home() {
     );
   }
 
-  const { getHomeCollections, getHomePage, getSiteSettings } = await import(
-    "@/sanity/queries"
-  );
-  const [content, settings, collections] = await Promise.all([
-    getHomePage(),
-    getSiteSettings(),
-    getHomeCollections(),
-  ]);
+  const { getHomePage, getSiteSettings } = await import("@/sanity/queries");
+  const [content, settings] = await Promise.all([getHomePage(), getSiteSettings()]);
 
   // Missing documents or empty fields fall back to the built-in live-site
   // copy, so the page never renders blank while editors fill in Studio.
@@ -89,7 +73,6 @@ export default async function Home() {
     <HomePage
       content={mergeHomeContent(content)}
       settings={settings?.pricing ? settings : previewSettings}
-      collections={withHomeFallbacks(collections ?? emptyCollections)}
     />
   );
 }

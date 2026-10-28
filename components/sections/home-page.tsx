@@ -19,12 +19,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
-import type {
-  CollectionItem,
-  FaqItem,
-  HomeSectionKey,
-  SiteSettings,
-} from "@/sanity/queries";
+import type { HeroPreview, HomeSectionKey, SiteSettings } from "@/sanity/queries";
 import { fillTokens, type ResolvedHomeContent } from "@/content/site/home";
 import { DemoForm } from "@/components/sections/demo-form";
 import { HeroEntrance } from "@/components/sections/hero-entrance";
@@ -32,19 +27,9 @@ import { HeroTitle, Reveal } from "@/components/motion/reveal";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 
-type HomeCollections = {
-  modules: CollectionItem[];
-  industries: CollectionItem[];
-  testimonials: CollectionItem[];
-  caseStudies: CollectionItem[];
-  comparisons: CollectionItem[];
-  faqs: FaqItem[];
-};
-
 type Props = {
   content: ResolvedHomeContent;
   settings: SiteSettings;
-  collections: HomeCollections;
 };
 
 const moduleIcons = [
@@ -54,6 +39,7 @@ const moduleIcons = [
   ClipboardCheck,
   Workflow,
 ];
+const previewNavIcons = [Layers3, ContactRound, ListTodo, UsersRound, BriefcaseBusiness];
 const industryIcons = [
   GraduationCap,
   HeartPulse,
@@ -87,7 +73,11 @@ function Heading({
   );
 }
 
-function ProductPreview() {
+function ProductPreview({ preview }: { preview: HeroPreview }) {
+  const stats = preview.stats ?? [];
+  const activities = preview.activities ?? [];
+  const activityColors = ["activity-purple", "activity-orange", "activity-green"];
+  const statBars = ["64%", "91%"];
   return (
     <div className="preview-stage">
       <div
@@ -100,8 +90,8 @@ function ProductPreview() {
             <i />
             <i />
           </span>
-          <span>workspace.bunch.app</span>
-          <span className="preview-window-avatar">A</span>
+          <span>{preview.address}</span>
+          <span className="preview-window-avatar">{preview.userInitials?.slice(0, 1)}</span>
         </div>
         <div className="preview-layout">
           <aside className="preview-sidebar" aria-hidden="true">
@@ -111,127 +101,109 @@ function ProductPreview() {
             </div>
             <div className="preview-workspace">
               <span className="workspace-dot" />
-              Your workspace <ChevronDown size={12} />
+              {preview.workspaceLabel} <ChevronDown size={12} />
             </div>
-            <div className="preview-nav-item preview-nav-active">
-              <Layers3 size={14} />
-              Overview
-            </div>
-            <div className="preview-nav-item">
-              <ContactRound size={14} />
-              Leads
-            </div>
-            <div className="preview-nav-item">
-              <ListTodo size={14} />
-              Tasks
-            </div>
-            <div className="preview-nav-item">
-              <UsersRound size={14} />
-              Team
-            </div>
-            <div className="preview-nav-item">
-              <BriefcaseBusiness size={14} />
-              Projects
-            </div>
+            {(preview.navItems ?? []).map((item, index) => {
+              const Icon = previewNavIcons[index % previewNavIcons.length];
+              return (
+                <div
+                  className={`preview-nav-item${index === 0 ? " preview-nav-active" : ""}`}
+                  key={`${item}-${index}`}
+                >
+                  <Icon size={14} />
+                  {item}
+                </div>
+              );
+            })}
             <div className="preview-sidebar-bottom">
-              <span className="preview-avatar">AS</span>Admin user
+              <span className="preview-avatar">{preview.userInitials}</span>
+              {preview.userName}
             </div>
           </aside>
           <div className="preview-main">
             <div className="preview-topline">
-              <span>MONDAY, 26 OCTOBER</span>
-              <span className="preview-today">Today</span>
+              <span>{preview.dateLabel}</span>
+              <span className="preview-today">{preview.todayLabel}</span>
             </div>
             <div className="preview-greeting">
               <div>
-                <b>Good morning, Anika</b>
-                <span>Here is what is happening across your business.</span>
+                <b>{preview.greeting}</b>
+                <span>{preview.greetingNote}</span>
               </div>
-              <span className="preview-add">+ Add new</span>
+              <span className="preview-add">{preview.addLabel}</span>
             </div>
             <div className="preview-stat-grid">
-              <div className="preview-stat">
-                <span>Open leads</span>
-                <b>128</b>
-                <small>↗ 12% this month</small>
-                <svg viewBox="0 0 80 20" aria-hidden="true">
-                  <path d="M0 16 L12 13 L24 15 L36 9 L48 11 L60 5 L80 2" />
-                </svg>
-              </div>
-              <div className="preview-stat">
-                <span>Tasks in progress</span>
-                <b>34</b>
-                <small>8 due today</small>
-                <span className="preview-bar">
-                  <i style={{ width: "64%" }} />
-                </span>
-              </div>
-              <div className="preview-stat">
-                <span>Team present</span>
-                <b>
-                  42 <i>/ 46</i>
-                </b>
-                <small>Updated just now</small>
-                <span className="preview-bar">
-                  <i style={{ width: "91%" }} />
-                </span>
-              </div>
+              {stats.slice(0, 3).map((stat, index) => {
+                // "42 / 46" shows the part after the slash in a lighter style.
+                const [value, total] = stat.value.split(/\s*\/\s*/);
+                return (
+                  <div className="preview-stat" key={`${stat.label}-${index}`}>
+                    <span>{stat.label}</span>
+                    <b>
+                      {value}
+                      {total ? <i> / {total}</i> : null}
+                    </b>
+                    <small>{stat.note}</small>
+                    {index === 0 ? (
+                      <svg viewBox="0 0 80 20" aria-hidden="true">
+                        <path d="M0 16 L12 13 L24 15 L36 9 L48 11 L60 5 L80 2" />
+                      </svg>
+                    ) : (
+                      <span className="preview-bar">
+                        <i style={{ width: statBars[(index - 1) % statBars.length] }} />
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
             <div className="preview-lower-grid">
               <div className="preview-panel">
                 <div className="preview-panel-heading">
-                  <b>Team activity</b>
-                  <span>See all</span>
+                  <b>{preview.activityTitle}</b>
+                  <span>{preview.activityLinkLabel}</span>
                 </div>
-                <div className="preview-activity">
-                  <i className="activity-purple" />
-                  <span>
-                    <b>Priya</b> moved a lead to proposal
-                  </span>
-                  <small>10:42</small>
-                </div>
-                <div className="preview-activity">
-                  <i className="activity-orange" />
-                  <span>
-                    <b>Rahul</b> completed a project task
-                  </span>
-                  <small>10:18</small>
-                </div>
-                <div className="preview-activity">
-                  <i className="activity-green" />
-                  <span>
-                    <b>Meera</b> checked in for the day
-                  </span>
-                  <small>09:06</small>
-                </div>
+                {activities.slice(0, 3).map((activity, index) => (
+                  <div className="preview-activity" key={`${activity.name}-${index}`}>
+                    <i className={activityColors[index % activityColors.length]} />
+                    <span>
+                      <b>{activity.name}</b> {activity.action}
+                    </span>
+                    <small>{activity.time}</small>
+                  </div>
+                ))}
               </div>
               <div className="preview-ai">
                 <span className="ai-orbit">
                   <Sparkles size={15} />
                 </span>
-                <small>BUNZO AI</small>
-                <b>Your team has 6 follow-ups due today.</b>
-                <span>Want me to create a task list?</span>
+                <small>{preview.aiLabel}</small>
+                <b>{preview.aiMessage}</b>
+                <span>{preview.aiQuestion}</span>
                 <span className="preview-ai-action">
-                  Create tasks <ArrowRight size={12} />
+                  {preview.aiActionLabel} <ArrowRight size={12} />
                 </span>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div className="float-chip float-chip-top" aria-hidden="true">
-        <span className="float-chip-icon">
-          <Check size={13} />
-        </span>
-        Payroll synced
-      </div>
-      <div className="float-chip float-chip-bottom" aria-hidden="true">
-        <span className="float-chip-icon float-chip-icon-ember">
-          <Sparkles size={13} />
-        </span>
-        6 follow-ups queued
-      </div>
+      {preview.chipTop ? (
+        <div className="float-chip float-chip-top" aria-hidden="true">
+          <span className="float-chip-icon">
+            <Check size={13} />
+          </span>
+          {preview.chipTop}
+        </div>
+      ) : null}
+      {preview.chipBottom ? (
+        <div className="float-chip float-chip-bottom" aria-hidden="true">
+          <span className="float-chip-icon float-chip-icon-ember">
+            <Sparkles size={13} />
+          </span>
+          {preview.chipBottom}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -260,20 +232,18 @@ function ActionLink({
   );
 }
 
-export function HomePage({ content, settings, collections }: Props) {
+export function HomePage({ content, settings }: Props) {
   const t = (text: string) => fillTokens(text, settings);
   const visible = (section: HomeSectionKey) =>
     !content.hiddenSections?.includes(section);
-  const annual = settings.pricing.annualAmount;
-  const annualMonthly = Math.round(annual / 12);
-  const taxNote = t(content.taxDisclaimer);
+  const annualMonthly = Math.round(settings.pricing.annualAmount / 12);
   const tickerSource = content.tickerItems.length
     ? content.tickerItems
     : [
-        ...collections.modules.map((item) => item.title),
+        ...content.moduleCards.map((item) => item.title),
         "Bunzo AI",
-        ...collections.industries.map((item) => item.title),
-      ].filter((item): item is string => Boolean(item));
+        ...content.industryCards.map((item) => item.title),
+      ].filter(Boolean);
   // The track scrolls by half its width, so each half must be wider than the
   // screen; repeat short lists until there are enough items.
   const tickerItems = tickerSource.length
@@ -288,7 +258,7 @@ export function HomePage({ content, settings, collections }: Props) {
       title: content.monthlyPlanTitle,
       description: content.monthlyPlanDescription,
       price: settings.pricing.monthlyAmount,
-      note: `Billed monthly, ${taxNote}`,
+      note: t(content.monthlyPriceNote),
       inclusions: content.monthlyInclusions,
     },
     {
@@ -298,7 +268,7 @@ export function HomePage({ content, settings, collections }: Props) {
       title: content.annualPlanTitle,
       description: content.annualPlanDescription,
       price: annualMonthly,
-      note: `₹${inr.format(annual)} billed yearly, ${taxNote}`,
+      note: t(content.annualPriceNote),
       inclusions: content.annualInclusions,
     },
   ];
@@ -364,7 +334,7 @@ export function HomePage({ content, settings, collections }: Props) {
                   />
                 </div>
               ) : (
-                <ProductPreview />
+                <ProductPreview preview={content.heroPreview} />
               )}
             </HeroEntrance>
           </section>
@@ -446,7 +416,7 @@ export function HomePage({ content, settings, collections }: Props) {
                       <p className="plan-caption">{plan.description}</p>
                       <p className="plan-price">
                         <span>₹</span> {inr.format(plan.price)}
-                        <small>/month</small>
+                        <small>{content.pricePeriod}</small>
                       </p>
                       <p className="tax-note">{plan.note}</p>
                       <ul>
@@ -457,12 +427,12 @@ export function HomePage({ content, settings, collections }: Props) {
                           </li>
                         ))}
                       </ul>
-                      <Link
+                      <ActionLink
                         className={`button ${plan.featured ? "button-accent" : "button-outline"}`}
-                        href="/start-free-trial/"
+                        href={content.pricingButtonLink}
                       >
                         {content.pricingButtonLabel} <ArrowRight size={16} />
-                      </Link>
+                      </ActionLink>
                     </article>
                   </Reveal>
                 ))}
@@ -484,27 +454,23 @@ export function HomePage({ content, settings, collections }: Props) {
               <p>{content.modulesDescription}</p>
             </Heading>
             <div className="modules-grid">
-              {collections.modules
-                .slice(0, settings.moduleCount)
-                .map((module, index) => {
-                  const Icon = moduleIcons[index % moduleIcons.length];
-                  return (
-                    <Reveal className="module-cell" delay={index * 0.07} key={module._id}>
-                      <Link className="module-item spotlight" href={module.route ?? "/modules/"}>
-                        <span className="module-icon">
-                          <Icon size={20} />
-                        </span>
-                        <span className="module-title">{module.title}</span>
-                        {module.ownerReviewRequired && !module.excerpt ? (
-                          <span className="content-review">Description pending review</span>
-                        ) : (
-                          <span className="module-description">{module.excerpt}</span>
-                        )}
-                        <ArrowUpRight className="module-arrow" size={17} />
-                      </Link>
-                    </Reveal>
-                  );
-                })}
+              {content.moduleCards.map((module, index) => {
+                const Icon = moduleIcons[index % moduleIcons.length];
+                return (
+                  <Reveal className="module-cell" delay={index * 0.07} key={`${module.title}-${index}`}>
+                    <ActionLink className="module-item spotlight" href={module.link || "/modules/"}>
+                      <span className="module-icon">
+                        <Icon size={20} />
+                      </span>
+                      <span className="module-title">{module.title}</span>
+                      {module.description ? (
+                        <span className="module-description">{module.description}</span>
+                      ) : null}
+                      <ArrowUpRight className="module-arrow" size={17} />
+                    </ActionLink>
+                  </Reveal>
+                );
+              })}
             </div>
           </section>
         ) : null}
@@ -558,12 +524,12 @@ export function HomePage({ content, settings, collections }: Props) {
             </div>
           </section>
         ) : null}
-        {visible("testimonials") && collections.testimonials.length ? (
+        {visible("testimonials") && content.testimonials.length ? (
           <section className="testimonials-section page-shell">
             <Heading eyebrow={content.testimonialsEyebrow} title={content.testimonialsTitle} />
             <div className="testimonials-grid">
-              {collections.testimonials.map((item, index) => (
-                <Reveal delay={(index % 3) * 0.08} key={item._id}>
+              {content.testimonials.map((item, index) => (
+                <Reveal delay={(index % 3) * 0.08} key={`${item.person}-${index}`}>
                   <blockquote className="testimonial-item spotlight">
                     <span className="quote-mark">“</span>
                     <p>{item.quote}</p>
@@ -590,18 +556,18 @@ export function HomePage({ content, settings, collections }: Props) {
                 <p>{content.industriesDescription}</p>
               </Heading>
               <div className="industry-cards">
-                {collections.industries.map((industry, index) => {
+                {content.industryCards.map((industry, index) => {
                   const Icon = industryIcons[index % industryIcons.length];
                   return (
-                    <Reveal delay={(index % 4) * 0.06} key={industry._id}>
-                      <Link className="industry-card spotlight" href={industry.route ?? "/industries/"}>
+                    <Reveal delay={(index % 4) * 0.06} key={`${industry.title}-${index}`}>
+                      <ActionLink className="industry-card spotlight" href={industry.link || "/industries/"}>
                         <span className="industry-icon">
                           <Icon size={18} />
                         </span>
                         <b>{industry.title}</b>
-                        {industry.excerpt ? <span>{industry.excerpt}</span> : null}
+                        {industry.description ? <span>{industry.description}</span> : null}
                         <ArrowUpRight className="industry-card-arrow" size={16} />
-                      </Link>
+                      </ActionLink>
                     </Reveal>
                   );
                 })}
@@ -610,16 +576,16 @@ export function HomePage({ content, settings, collections }: Props) {
             </div>
           </section>
         ) : null}
-        {visible("caseStudies") && collections.caseStudies.length ? (
+        {visible("caseStudies") && content.caseStudyCards.length ? (
           <section className="case-studies-section page-shell">
             <Heading eyebrow={content.caseStudiesEyebrow} title={content.caseStudiesTitle}>
               <p>{content.caseStudiesDescription}</p>
             </Heading>
             <div className="case-studies-grid">
-              {collections.caseStudies.slice(0, 3).map((study, index) => (
-                <Reveal delay={index * 0.08} key={study._id}>
+              {content.caseStudyCards.map((study, index) => (
+                <Reveal delay={index * 0.08} key={`${study.company}-${index}`}>
                   <article className="case-study-item spotlight">
-                    <span className="case-study-company">{study.title}</span>
+                    <span className="case-study-company">{study.company}</span>
                     <b>{study.metric}</b>
                     {study.summary ? <p>{study.summary}</p> : null}
                   </article>
@@ -628,14 +594,14 @@ export function HomePage({ content, settings, collections }: Props) {
             </div>
             {content.caseStudiesLinkLabel ? (
               <Reveal className="case-more">
-                <Link href="/case-studies/">
+                <ActionLink className="case-more-link" href={content.caseStudiesLink}>
                   {content.caseStudiesLinkLabel} <ArrowUpRight size={16} />
-                </Link>
+                </ActionLink>
               </Reveal>
             ) : null}
           </section>
         ) : null}
-        {visible("comparison") && collections.comparisons.length ? (
+        {visible("comparison") && content.comparisonRows.length ? (
           <section className="comparison-section section-band" id="compare">
             <div className="page-shell">
               <Heading eyebrow={content.comparisonsEyebrow} title={content.comparisonsTitle}>
@@ -659,8 +625,8 @@ export function HomePage({ content, settings, collections }: Props) {
                       </tr>
                     </thead>
                     <tbody>
-                      {collections.comparisons.map((row) => (
-                        <tr key={row._id}>
+                      {content.comparisonRows.map((row, index) => (
+                        <tr key={`${row.feature}-${index}`}>
                           <th scope="row">{row.feature}</th>
                           <td className="bunch-cell">{row.bunch}</td>
                           <td>{row.spreadsheets}</td>
@@ -704,19 +670,27 @@ export function HomePage({ content, settings, collections }: Props) {
               ) : null}
             </Reveal>
             <Reveal delay={0.12}>
-              <DemoForm />
+              <DemoForm
+                labels={{
+                  name: content.demoFormNameLabel,
+                  email: content.demoFormEmailLabel,
+                  phone: content.demoFormPhoneLabel,
+                  button: content.demoFormButtonLabel,
+                  privacy: content.demoFormPrivacyNote,
+                }}
+              />
             </Reveal>
           </section>
         ) : null}
-        {visible("faq") && collections.faqs.length ? (
+        {visible("faq") && content.faqs.length ? (
           <section className="faq-section section-band" id="faq">
             <div className="page-shell faq-layout">
               <Heading eyebrow={content.faqEyebrow} title={content.faqTitle}>
                 <p>{content.faqDescription}</p>
               </Heading>
               <div className="faq-list">
-                {collections.faqs.map((item: FaqItem) => (
-                  <details className="faq-item" key={item._id}>
+                {content.faqs.map((item, index) => (
+                  <details className="faq-item" key={`${item.question}-${index}`}>
                     <summary>
                       {item.question}
                       <span className="faq-toggle" aria-hidden="true" />

@@ -117,6 +117,42 @@ const list = (name: string, title: string, group: string, description?: string) 
 const link = (name: string, title: string, group: string) =>
   text(name, title, group, "A path such as /pricing/, a section anchor such as #modules, or a full URL.");
 
+type ItemField = { name: string; title: string; long?: boolean };
+const cardList = (
+  name: string,
+  title: string,
+  group: string,
+  itemTitle: string,
+  fields: ItemField[],
+  preview: { title: string; subtitle?: string },
+  description?: string,
+) =>
+  defineField({
+    name,
+    title,
+    type: "array",
+    group,
+    description,
+    of: [
+      defineField({
+        name: "item",
+        type: "object",
+        title: itemTitle,
+        fields: fields.map((field) =>
+          field.long
+            ? defineField({ name: field.name, title: field.title, type: "text", rows: 3 })
+            : defineField({ name: field.name, title: field.title, type: "string" }),
+        ),
+        preview: { select: preview },
+      }),
+    ],
+  });
+const cardFields: ItemField[] = [
+  { name: "title", title: "Title" },
+  { name: "description", title: "Description", long: true },
+  { name: "link", title: "Link (e.g. /modules/lead-management/)" },
+];
+
 const tokenHelp =
   "You can use {moduleCount}, {monthlyPrice}, {annualPrice}, {annualMonthlyPrice}, {taxRate} and {trialDays}; they are filled in from Site settings.";
 
@@ -214,6 +250,78 @@ export const homePage = defineType({
     text("heroSecondaryLabel", "Secondary button label", "hero"),
     link("heroSecondaryLink", "Secondary button link", "hero"),
     list("heroTrustPoints", "Trust points", "hero", tokenHelp),
+    defineField({
+      name: "heroPreview",
+      title: "Dashboard illustration text",
+      description: "The words inside the illustrated dashboard on the right of the hero (hidden when a hero image is uploaded).",
+      type: "object",
+      group: "hero",
+      options: { collapsible: true, collapsed: true },
+      fields: [
+        defineField({ name: "address", type: "string", title: "Address bar" }),
+        defineField({ name: "workspaceLabel", type: "string", title: "Workspace name" }),
+        defineField({
+          name: "navItems",
+          type: "array",
+          title: "Sidebar menu items",
+          of: [defineField({ name: "item", type: "string", title: "Item" })],
+        }),
+        defineField({ name: "userName", type: "string", title: "User name (sidebar)" }),
+        defineField({ name: "userInitials", type: "string", title: "User initials" }),
+        defineField({ name: "dateLabel", type: "string", title: "Date line" }),
+        defineField({ name: "todayLabel", type: "string", title: "Date badge" }),
+        defineField({ name: "greeting", type: "string", title: "Greeting" }),
+        defineField({ name: "greetingNote", type: "string", title: "Greeting sub-line" }),
+        defineField({ name: "addLabel", type: "string", title: "Add button" }),
+        defineField({
+          name: "stats",
+          type: "array",
+          title: "Stat cards (up to 3)",
+          description: "Write a value like “42 / 46” to show the total in a lighter style.",
+          validation: (rule) => rule.max(3),
+          of: [
+            defineField({
+              name: "stat",
+              type: "object",
+              title: "Stat",
+              fields: [
+                defineField({ name: "label", type: "string", title: "Label" }),
+                defineField({ name: "value", type: "string", title: "Value" }),
+                defineField({ name: "note", type: "string", title: "Note" }),
+              ],
+              preview: { select: { title: "label", subtitle: "value" } },
+            }),
+          ],
+        }),
+        defineField({ name: "activityTitle", type: "string", title: "Activity panel heading" }),
+        defineField({ name: "activityLinkLabel", type: "string", title: "Activity panel link" }),
+        defineField({
+          name: "activities",
+          type: "array",
+          title: "Activity rows (up to 3)",
+          validation: (rule) => rule.max(3),
+          of: [
+            defineField({
+              name: "activity",
+              type: "object",
+              title: "Activity",
+              fields: [
+                defineField({ name: "name", type: "string", title: "Name" }),
+                defineField({ name: "action", type: "string", title: "Action" }),
+                defineField({ name: "time", type: "string", title: "Time" }),
+              ],
+              preview: { select: { title: "name", subtitle: "action" } },
+            }),
+          ],
+        }),
+        defineField({ name: "aiLabel", type: "string", title: "AI card label" }),
+        defineField({ name: "aiMessage", type: "string", title: "AI card message" }),
+        defineField({ name: "aiQuestion", type: "string", title: "AI card question" }),
+        defineField({ name: "aiActionLabel", type: "string", title: "AI card button" }),
+        defineField({ name: "chipTop", type: "string", title: "Floating badge (top)" }),
+        defineField({ name: "chipBottom", type: "string", title: "Floating badge (bottom)" }),
+      ],
+    }),
 
     text("challengeEyebrow", "Eyebrow", "challenge"),
     text("challengeTitle", "Heading", "challenge"),
@@ -261,13 +369,17 @@ export const homePage = defineType({
     longText("annualPlanDescription", "Annual plan: description", "pricing"),
     text("annualPopularLabel", "Annual plan: badge", "pricing"),
     list("annualInclusions", "Annual plan: inclusions", "pricing", tokenHelp),
-    text("taxDisclaimer", "Tax note", "pricing", tokenHelp),
+    text("pricePeriod", "Text after the price", "pricing", "For example “/month”. The prices themselves are set in Site settings."),
+    text("monthlyPriceNote", "Monthly plan: note under the price", "pricing", tokenHelp),
+    text("annualPriceNote", "Annual plan: note under the price", "pricing", tokenHelp),
     text("pricingButtonLabel", "Button label", "pricing"),
+    link("pricingButtonLink", "Button link", "pricing"),
     list("trialNotes", "Notes under the plans", "pricing", tokenHelp),
 
     text("modulesEyebrow", "Eyebrow", "modules"),
     text("modulesTitle", "Heading", "modules", tokenHelp),
-    longText("modulesDescription", "Description", "modules", "The module cards come from the Module documents."),
+    longText("modulesDescription", "Description", "modules"),
+    cardList("moduleCards", "Module cards", "modules", "Module card", cardFields, { title: "title", subtitle: "description" }, "Drag to reorder. Icons follow the card order."),
 
     text("bunzoEyebrow", "Eyebrow", "bunzo"),
     text("bunzoTitle", "Heading", "bunzo"),
@@ -282,21 +394,50 @@ export const homePage = defineType({
     text("bunzoInputPlaceholder", "Chat window: input placeholder", "bunzo"),
 
     text("testimonialsEyebrow", "Eyebrow", "testimonials"),
-    text("testimonialsTitle", "Heading", "testimonials", "Quotes come from the Testimonial documents."),
+    text("testimonialsTitle", "Heading", "testimonials"),
+    cardList(
+      "testimonials",
+      "Testimonials",
+      "testimonials",
+      "Testimonial",
+      [
+        { name: "quote", title: "Quote", long: true },
+        { name: "person", title: "Name" },
+        { name: "role", title: "Role" },
+        { name: "company", title: "Company" },
+      ],
+      { title: "person", subtitle: "company" },
+      "Drag to reorder.",
+    ),
 
     text("industriesEyebrow", "Eyebrow", "industries"),
     text("industriesTitle", "Heading", "industries"),
-    longText("industriesDescription", "Description", "industries", "Industry cards come from the Industry documents (name and card description)."),
+    longText("industriesDescription", "Description", "industries"),
+    cardList("industryCards", "Industry cards", "industries", "Industry card", cardFields, { title: "title", subtitle: "description" }, "Drag to reorder."),
     text("industriesNote", "Note under the cards", "industries"),
 
     text("caseStudiesEyebrow", "Eyebrow", "caseStudies"),
     text("caseStudiesTitle", "Heading", "caseStudies"),
-    longText("caseStudiesDescription", "Description", "caseStudies", "Cards come from the Case study documents."),
+    longText("caseStudiesDescription", "Description", "caseStudies"),
+    cardList(
+      "caseStudyCards",
+      "Case study cards",
+      "caseStudies",
+      "Case study card",
+      [
+        { name: "company", title: "Company" },
+        { name: "metric", title: "Result (large text)" },
+        { name: "summary", title: "Summary", long: true },
+      ],
+      { title: "metric", subtitle: "company" },
+      "Drag to reorder.",
+    ),
     text("caseStudiesLinkLabel", "Link label", "caseStudies"),
+    link("caseStudiesLink", "Link", "caseStudies"),
 
     text("comparisonsEyebrow", "Eyebrow", "comparison"),
     text("comparisonsTitle", "Heading", "comparison"),
-    text("comparisonsDescription", "Description", "comparison", "Rows come from the Comparison row documents."),
+    text("comparisonsDescription", "Description", "comparison"),
     defineField({
       name: "comparisonHeaders",
       title: "Column headings",
@@ -310,6 +451,21 @@ export const homePage = defineType({
         defineField({ name: "zohoOne", type: "string", title: "Zoho One column" }),
       ],
     }),
+    cardList(
+      "comparisonRows",
+      "Table rows",
+      "comparison",
+      "Row",
+      [
+        { name: "feature", title: "Feature" },
+        { name: "bunch", title: "Bunch", long: true },
+        { name: "spreadsheets", title: "Spreadsheets", long: true },
+        { name: "bigin", title: "Bigin (Zoho)", long: true },
+        { name: "zohoOne", title: "Zoho One", long: true },
+      ],
+      { title: "feature", subtitle: "bunch" },
+      "Drag to reorder.",
+    ),
     text("comparisonFootnote", "Footnote under the table", "comparison"),
 
     text("demoEyebrow", "Eyebrow", "demo"),
@@ -317,10 +473,27 @@ export const homePage = defineType({
     longText("demoDescription", "Description", "demo"),
     list("demoPoints", "Bullet points", "demo", tokenHelp),
     text("demoNote", "Note next to the icon", "demo"),
+    text("demoFormNameLabel", "Form: name label", "demo"),
+    text("demoFormEmailLabel", "Form: email label", "demo"),
+    text("demoFormPhoneLabel", "Form: phone label", "demo"),
+    text("demoFormButtonLabel", "Form: button label", "demo"),
+    text("demoFormPrivacyNote", "Form: privacy note", "demo", "Shown before the “Privacy Policy” link."),
 
     text("faqEyebrow", "Eyebrow", "faq"),
     text("faqTitle", "Heading", "faq"),
-    text("faqDescription", "Description", "faq", "Questions come from FAQ documents with “Show on home page” ticked."),
+    text("faqDescription", "Description", "faq"),
+    cardList(
+      "faqs",
+      "Questions",
+      "faq",
+      "Question",
+      [
+        { name: "question", title: "Question" },
+        { name: "answer", title: "Answer", long: true },
+      ],
+      { title: "question", subtitle: "answer" },
+      "Drag to reorder.",
+    ),
 
     text("finalCtaTitle", "Heading", "finalCta"),
     longText("finalCtaDescription", "Description", "finalCta"),
@@ -405,47 +578,6 @@ export const industryPage = defineType({
   ],
 });
 
-export const testimonial = defineType({
-  name: "testimonial",
-  title: "Testimonial",
-  type: "document",
-  fields: [
-    defineField({
-      name: "quote",
-      type: "text",
-      title: "Quote",
-      validation: (rule) => rule.required(),
-    }),
-    defineField({ name: "person", type: "string", title: "Name" }),
-    defineField({ name: "role", type: "string", title: "Role" }),
-    defineField({ name: "company", type: "string", title: "Company" }),
-    defineField({ name: "order", type: "number", title: "Display order" }),
-  ],
-});
-
-export const caseStudy = defineType({
-  name: "caseStudy",
-  title: "Case study",
-  type: "document",
-  fields: [
-    defineField({
-      name: "title",
-      type: "string",
-      title: "Company",
-      validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: "metric",
-      type: "string",
-      title: "Headline metric",
-      validation: (rule) => rule.required(),
-    }),
-    defineField({ name: "summary", type: "text", title: "Summary", rows: 3 }),
-    defineField({ name: "route", type: "string", title: "Route" }),
-    defineField({ name: "order", type: "number", title: "Display order" }),
-  ],
-});
-
 export const faq = defineType({
   name: "faq",
   title: "FAQ",
@@ -464,35 +596,6 @@ export const faq = defineType({
       rows: 4,
       validation: (rule) => rule.required(),
     }),
-    defineField({
-      name: "showOnHome",
-      type: "boolean",
-      title: "Show on home page",
-      initialValue: true,
-    }),
-    defineField({ name: "order", type: "number", title: "Display order" }),
-  ],
-});
-
-export const comparisonRow = defineType({
-  name: "comparisonRow",
-  title: "Comparison row",
-  type: "document",
-  fields: [
-    defineField({
-      name: "feature",
-      type: "string",
-      title: "Feature",
-      validation: (rule) => rule.required(),
-    }),
-    defineField({ name: "bunch", type: "string", title: "Bunch" }),
-    defineField({
-      name: "spreadsheets",
-      type: "string",
-      title: "Spreadsheets",
-    }),
-    defineField({ name: "bigin", type: "string", title: "Bigin (Zoho)" }),
-    defineField({ name: "zohoOne", type: "string", title: "Zoho One" }),
     defineField({ name: "order", type: "number", title: "Display order" }),
   ],
 });
@@ -581,10 +684,7 @@ export const schemaTypes = [
   homePage,
   modulePage,
   industryPage,
-  testimonial,
-  caseStudy,
   faq,
-  comparisonRow,
   genericPage,
   blogPost,
   lead,

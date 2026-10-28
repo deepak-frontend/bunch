@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "seed:sanity": "tsx scripts/seed-sanity.ts"
+    "seed:sanity": "tsx scripts/seed-sanity.ts",
+    "fill:home": "tsx --env-file=.env.local scripts/fill-home-page.ts"
   },
   "dependencies": {
     "@portabletext/react": "^8.0.1",

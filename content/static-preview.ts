@@ -1,15 +1,6 @@
-import {
-  homeCaseStudies,
-  homeDefaults,
-  homeIndustries,
-  homeModules,
-} from "@/content/site/home";
+import { homeDefaults } from "@/content/site/home";
 import { catchAllRoutes } from "@/lib/site-routes";
-import type {
-  CollectionItem,
-  FaqItem,
-  SiteSettings,
-} from "@/sanity/queries";
+import type { SiteSettings } from "@/sanity/queries";
 
 export const useStaticPreview =
   process.env.NODE_ENV === "development" &&
@@ -27,15 +18,6 @@ export const previewSettings: SiteSettings = {
 
 // The homepage preview uses the same defaults Sanity falls back to.
 export const previewHome = homeDefaults;
-
-export const previewCollections = {
-  modules: homeModules,
-  industries: homeIndustries,
-  testimonials: [] as CollectionItem[],
-  caseStudies: homeCaseStudies,
-  comparisons: [] as CollectionItem[],
-  faqs: [] as FaqItem[],
-};
 
 const routeNames: Record<string, string> = {
   "/bunzo/": "Bunzo AI",
